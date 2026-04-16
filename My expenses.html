@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Expense Tracker</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #f4f7f6; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center; 
+        }
+        .container { 
+            background: white; 
+            padding: 25px 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            max-width: 550px; 
+            width: 100%; 
+        }
+        h2 { 
+            text-align: center; 
+            color: #333; 
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        
+        /* Month Selector */
+        .month-header {
+            background-color: #2b6cb0;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .month-header input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            width: auto;
+        }
+
+        /* Dashboard Styles */
+        .salary-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .salary-input-container label {
+            margin-bottom: 0;
+            white-space: nowrap;
+            font-weight: bold;
+            color: #555;
+        }
+        .salary-btn {
+            background-color: #4a5568;
+            width: auto;
+            padding: 10px 15px;
+            flex-shrink: 0;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .salary-btn:hover {
+            background-color: #2d3748;
+        }
+        .dashboard {
+            display: flex;
+            justify-content: space-between;
+            background-color: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #e2e8f0;
+        }
+        .dash-item {
+            text-align: center;
+            flex: 1;
+            font-weight: bold;
+            color: #555;
+        }
+        .dash-item span {
+            display: block;
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .color-green { color: #2f855a; }
+        .color-red { color: #e53e3e; }
+        .color-blue { color: #2b6cb0; }
+
+        /* Form Styles */
+        .form-group { 
+            margin-bottom: 15px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+            color: #555; 
+        }
+        input { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px; 
+            box-sizing: border-box; 
+            font-size: 16px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        button.primary-btn { 
+            flex: 1;
+            padding: 12px; 
+            background-color: #2b6cb0; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            font-size: 16px; 
+            font-weight: bold;
+            cursor: pointer; 
+            transition: background-color 0.2s;
+        }
+        button.primary-btn:hover { 
+            background-color: #2c5282; 
+        }
+        .export-btn {
+            background-color: #2f855a !important;
+        }
+        .export-btn:hover {
+            background-color: #276749 !important;
+        }
+        
+        /* Table Styles */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 25px; 
+        }
+        th, td { 
+            text-align: left; 
+            padding: 12px 10px; 
+            border-bottom: 1px solid #eee; 
+        }
+        th { 
+            background-color: #f8f9fa; 
+            color: #333;
+        }
+        .delete-btn { 
+            background-color: #e53e3e; 
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 6px 10px; 
+            font-size: 12px; 
+            cursor: pointer;
+        }
+        .delete-btn:hover { 
+            background-color: #c53030; 
+        }
+        .empty-state {
+            text-align: center;
+            color: #777;
+            font-style: italic;
+            padding: 15px;
+        }
+        hr {
+            border: 0;
+            height: 1px;
+            background: #e2e8f0;
+            margin: 25px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Expense Tracker</h2>
+    
+    <div class="month-header">
+        <span>📅 Viewing Month:</span>
+        <input type="month" id="view-month" onchange="updateUI()">
+    </div>
+
+    <div class="salary-input-container">
+        <label for="monthly-salary">Salary for this month:</label>
+        <input type="number" id="monthly-salary" step="0.01" min="0" placeholder="Enter salary (₹)">
+        <button class="salary-btn" onclick="saveSalary()">Set / Edit</button>
+    </div>
+
+    <div class="dashboard">
+        <div class="dash-item">
+            Salary
+            <span class="color-blue">₹<span id="dash-salary">0.00</span></span>
+        </div>
+        <div class="dash-item">
+            Expenses
+            <span class="color-red">₹<span id="dash-expenses">0.00</span></span>
+        </div>
+        <div class="dash-item">
+            Balance
+            <span id="dash-balance" class="color-green">₹0.00</span>
+        </div>
+    </div>
+
+    <hr>
+    
+    <form id="expense-form">
+        <div class="form-group">
+            <label for="date">Expense Date</label>
+            <input type="date" id="date" required>
+        </div>
+        <div class="form-group">
+            <label for="category">Category</label>
+            <input type="text" id="category" placeholder="e.g. Groceries, Gym, Coffee" required>
+        </div>
+        <div class="form-group">
+            <label for="cost">Cost (₹)</label>
+            <input type="number" id="cost" step="0.01" min="0" placeholder="0.00" required>
+        </div>
+        
+        <div class="btn-group">
+            <button type="submit" class="primary-btn">Add Expense</button>
+            <button type="button" class="primary-btn export-btn" onclick="exportToCSV()">Download All Data</button>
+        </div>
+    </form>
+
+    <table id="expense-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Cost</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="expense-list">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    const form = document.getElementById('expense-form');
+    const expenseList = document.getElementById('expense-list');
+    
+    // Dashboard Elements
+    const dashSalary = document.getElementById('dash-salary');
+    const dashExpenses = document.getElementById('dash-expenses');
+    const dashBalance = document.getElementById('dash-balance');
+    const salaryInput = document.getElementById('monthly-salary');
+    const viewMonthInput = document.getElementById('view-month');
+
+    // Set viewing month to CURRENT month on first load
+    const now = new Date();
+    // Format YYYY-MM
+    const currentMonthString = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    viewMonthInput.value = currentMonthString;
+    document.getElementById('date').valueAsDate = now;
+
+    // Load data from local storage
+    let expenses = JSON.parse(localStorage.getItem('myExpenses')) || [];
+    // Salaries are now an object storing data per month: e.g. { "2026-04": 50000, "2026-05": 55000 }
+    let monthlySalaries = JSON.parse(localStorage.getItem('myMonthlySalaries')) || {};
+
+    // Check if user is upgrading from the old version (transfer old single salary to current month)
+    let oldSingleSalary = localStorage.getItem('myMonthlySalary');
+    if (oldSingleSalary !== null) {
+        monthlySalaries[currentMonthString] = parseFloat(oldSingleSalary);
+        localStorage.removeItem('myMonthlySalary'); // Clean up old data
+        localStorage.setItem('myMonthlySalaries', JSON.stringify(monthlySalaries));
+    }
+
+    // Function to save salary for the specific month
+    window.saveSalary = function() {
+        const inputVal = parseFloat(salaryInput.value);
+        const selectedMonth = viewMonthInput.value;
+        
+        if (!isNaN(inputVal) && inputVal >= 0 && selectedMonth) {
+            monthlySalaries[selectedMonth] = inputVal;
+            localStorage.setItem('myMonthlySalaries', JSON.stringify(monthlySalaries));
+            updateUI(); // Refresh dashboard
+        } else {
+            alert("Please enter a valid salary amount.");
+        }
+    }
+
+    // Function to render the table and update dashboard based on SELECTED MONTH
+    window.updateUI = function() {
+        expenseList.innerHTML = '';
+        let totalExpensesForMonth = 0;
+        const selectedMonth = viewMonthInput.value; // e.g. "2026-04"
+
+        // 1. Handle Salary Display for this month
+        let salaryForThisMonth = monthlySalaries[selectedMonth] || 0;
+        salaryInput.value = salaryForThisMonth > 0 ? salaryForThisMonth : '';
+
+        // 2. Filter expenses to ONLY show ones from the selected month
+        // We check if the expense date (e.g. "2026-04-16") starts with the selected month ("2026-04")
+        const filteredExpenses = expenses.filter(exp => exp.date.startsWith(selectedMonth));
+
+        if (filteredExpenses.length === 0) {
+            expenseList.innerHTML = `<tr><td colspan="4" class="empty-state">No expenses recorded for this month.</td></tr>`;
+        } else {
+            // Sort filtered expenses by date (newest first)
+            filteredExpenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            filteredExpenses.forEach((expense) => {
+                totalExpensesForMonth += parseFloat(expense.cost);
+                
+                // Find the real index of this item in the MAIN expenses array so we can delete it properly
+                const realIndex = expenses.findIndex(e => e.date === expense.date && e.category === expense.category && e.cost === expense.cost);
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${expense.date}</td>
+                    <td>${expense.category}</td>
+                    <td>₹${parseFloat(expense.cost).toFixed(2)}</td>
+                    <td><button class="delete-btn" onclick="deleteExpense(${realIndex})">Delete</button></td>
+                `;
+                expenseList.appendChild(row);
+            });
+        }
+        
+        // 3. Update Dashboard Numbers
+        dashSalary.innerText = salaryForThisMonth.toFixed(2);
+        dashExpenses.innerText = totalExpensesForMonth.toFixed(2);
+        
+        // 4. Calculate and display balance
+        let balance = salaryForThisMonth - totalExpensesForMonth;
+        dashBalance.innerText = `₹${balance.toFixed(2)}`;
+        
+        // Turn balance red if it drops below zero
+        if (balance < 0) {
+            dashBalance.className = "color-red";
+        } else {
+            dashBalance.className = "color-green";
+        }
+    }
+
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); 
+        
+        const date = document.getElementById('date').value;
+        const category = document.getElementById('category').value;
+        const cost = document.getElementById('cost').value;
+
+        // Create expense object and add to global array
+        const expense = { date, category, cost };
+        expenses.push(expense);
+        
+        // Save to local storage
+        localStorage.setItem('myExpenses', JSON.stringify(expenses));
+        
+        // Automatically switch the Viewing Month to match the date of the expense you just added
+        const expenseMonth = date.substring(0, 7); // Extracts "YYYY-MM"
+        if (viewMonthInput.value !== expenseMonth) {
+            viewMonthInput.value = expenseMonth;
+        }
+        
+        // Reset form cost and category, keep date
+        document.getElementById('cost').value = '';
+        document.getElementById('category').value = '';
+        document.getElementById('category').focus(); 
+        
+        updateUI();
+    });
+
+    // Handle deletion
+    window.deleteExpense = function(index) {
+        expenses.splice(index, 1);
+        localStorage.setItem('myExpenses', JSON.stringify(expenses));
+        updateUI();
+    }
+
+    // Handle CSV Export (Downloads ALL data, not just the current month)
+    window.exportToCSV = function() {
+        if (expenses.length === 0) {
+            alert("You don't have any expenses to download yet!");
+            return;
+        }
+
+        // Create the CSV header
+        let csvContent = "Date,Category,Cost\n";
+
+        // Add all rows
+        expenses.forEach(function(row) {
+            csvContent += `${row.date},"${row.category}",${row.cost}\n`;
+        });
+
+        // Trigger the download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "My_All_Expenses.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Initial render
+    updateUI();
+</script>
+
+</body>
+</html>
